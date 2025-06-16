@@ -1,55 +1,86 @@
 <template>
   <div class="race">
-    <div class="boxes">
+    <div class="race-container">
+      <!-- Racer List (unchanged) -->
       <div class="positions-container">
         <RacerList :racers="globalStore.activeRace.positions" />
       </div>
-      <div class="blocks-container">
-        <div class="blocks">
-          <span id="track-name"> {{ globalStore.activeRace.raceName }}</span>
-          <div
-            class="position-container"
-            v-if="
-              globalStore.activeRace.totalRacers &&
-              globalStore.activeRace.totalRacers !== 1
-            "
+      
+      <!-- Main Race Info Panel -->
+      <div class="race-info-panel">
+        <!-- Race Name and Position Header -->
+        <div class="race-header">
+          <h2 class="race-name">{{ globalStore.activeRace.raceName }}</h2>
+          <div 
+            class="position-display"
+            v-if="globalStore.activeRace.totalRacers && globalStore.activeRace.totalRacers !== 1"
           >
-            <span id="smaller">{{ translate("pos") }}</span>
-            <span id="position">{{
-              `${globalStore.activeRace.position}/${globalStore.activeRace.totalRacers}`
-            }}</span>
+            <span class="position-text">{{ globalStore.activeRace.position }}/{{ globalStore.activeRace.totalRacers }}</span>
           </div>
-          <div class="column">
-            <span id="smaller">{{ translate("checkpoints") }}</span>
-            <span id="checkpoint">{{
-              `${globalStore.activeRace.currentCheckpoint}/${globalStore.activeRace.totalCheckpoints}`
-            }}</span>
+        </div>
+
+        <!-- Timing Information -->
+        <div class="timing-section">
+          <!-- Lap Information -->
+          <div class="timing-row lap-row">
+            <div class="timing-icon">
+              <v-icon icon="mdi-flag-checkered" class="flag-icon"></v-icon>
+            </div>
+            <div class="timing-content">
+              <span class="timing-label">LAP</span>
+              <span class="timing-value">{{ lapText }}</span>
+            </div>
           </div>
-          <div class="row">
-            <span id="race-time">{{ lapText }}</span>
-            <v-icon icon="mdi-cached"></v-icon>
+
+          <!-- Total Time -->
+          <div class="timing-row">
+            <div class="timing-icon">
+              <v-icon icon="mdi-timer-outline" class="time-icon"></v-icon>
+            </div>
+            <div class="timing-content">
+              <span class="timing-label">TOTAL</span>
+              <span class="timing-value">{{ msToHMS(globalStore.activeRace.totalTime) }}</span>
+            </div>
           </div>
-          <div class="row">
-            <span id="race-time">{{
-              msToHMS(globalStore.activeRace.time)
-            }}</span>
-            <v-icon icon="mdi-timer-sync-outline"></v-icon>
+
+          <!-- Current Lap Time -->
+          <div class="timing-row">
+            <div class="timing-icon">
+              <v-icon icon="mdi-timer-sync-outline" class="time-icon"></v-icon>
+            </div>
+            <div class="timing-content">
+              <span class="timing-label">CURRENT</span>
+              <span class="timing-value">{{ msToHMS(globalStore.activeRace.time) }}</span>
+            </div>
           </div>
-          <div class="row">
-            <span id="race-time">{{
-              msToHMS(globalStore.activeRace.totalTime)
-            }}</span>
-            <v-icon icon="mdi-timer-outline"></v-icon>
+
+          <!-- Best Lap -->
+          <div class="timing-row">
+            <div class="timing-icon">
+              <v-icon icon="mdi-star" class="star-icon"></v-icon>
+            </div>
+            <div class="timing-content">
+              <span class="timing-label">BEST</span>
+              <span class="timing-value">{{ msToHMS(globalStore.activeRace.bestLap) }}</span>
+            </div>
           </div>
-          <div class="row">
-            <span id="race-time">{{
-              msToHMS(globalStore.activeRace.bestLap)
-            }}</span>
-            <v-icon icon="mdi-timer-star-outline"></v-icon>
+
+          <!-- Checkpoint -->
+          <div class="timing-row">
+            <div class="timing-icon">
+              <v-icon icon="mdi-map-marker" class="checkpoint-icon"></v-icon>
+            </div>
+            <div class="timing-content">
+              <span class="timing-label">CHECKPOINT</span>
+              <span class="timing-value">{{ globalStore.activeRace.currentCheckpoint }}/{{ globalStore.activeRace.totalCheckpoints }}</span>
+            </div>
           </div>
-          <div id="race-ghosted-span" v-if="globalStore.activeRace.ghosted">
-            <v-icon icon="mdi-ghost-outline"></v-icon>
-          </div>
+        </div>
+
+        <!-- Ghosted Indicator -->
+        <div class="ghosted-indicator" v-if="globalStore.activeRace.ghosted">
+          <v-icon icon="mdi-ghost-outline" class="ghost-icon"></v-icon>
+          <span class="ghost-text">GHOSTED</span>
         </div>
       </div>
     </div>
@@ -61,27 +92,12 @@ import RacerList from "./RacerList.vue";
 import { useGlobalStore } from "@/store/global";
 import { msToHMS } from "@/helpers/msToHMS";
 import { computed } from "vue";
-const globalStore = useGlobalStore();
 import { translate } from "@/helpers/translate";
 
-const hudpositionToCss: Record<string, string> = {
-  split: "space-between",
-  left: "start",
-  right: "end",
-};
+const globalStore = useGlobalStore();
 
-const placement = computed(() =>
-  globalStore.baseData?.data?.hudSettings?.location
-    ? hudpositionToCss[globalStore.baseData?.data?.hudSettings?.location]
-    : "space-between"
-);
-const direction = computed(() =>
-  globalStore.baseData?.data?.hudSettings?.location === "left"
-    ? "row-reverse"
-    : "row"
-);
 const lapText = computed(() => {
-  if (globalStore.activeRace.totalLaps === 0) return "Sprint";
+  if (globalStore.activeRace.totalLaps === 0) return "SPRINT";
   else if (globalStore.activeRace.totalLaps === -1)
     return `${globalStore.activeRace.currentLap}/-`;
   return `${globalStore.activeRace.currentLap}/${globalStore.activeRace.totalLaps}`;
@@ -89,146 +105,192 @@ const lapText = computed(() => {
 </script>
 
 <style scoped lang="scss">
-span {
-  text-shadow:1px 1px 18px rgb(0, 0, 0);
-}
-
-#race-ghosted-span {
-  display: flex;
-  justify-content: end;
-}
-
-#race-time {
-  color: #ffffffc7;
-}
 .race {
   position: absolute;
-  top: 5vh;
-  left: 0;
+  top: 0;
+  right: 0;
   z-index: 100;
+  padding: 20px;
+  font-family: 'Roboto', 'Arial', sans-serif;
 }
-.boxes {
-  font-family: "Oswald", sans-serif;
-  text-transform: uppercase;
-  display: flex;
-  justify-content: v-bind(placement);
-  flex-direction: v-bind(direction);
-  width: 100vw;
-}
-.blocks-container {
+
+.race-container {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  gap: 1em;
+  gap: 20px;
+  align-items: flex-start;
 }
 
 .positions-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1em;
-  margin: 2em;
-  margin-bottom: 5%;
-  right: 0%;
-  // transform: rotate(355deg);
+  // Keep existing RacerList positioning
 }
 
-.blocks {
-  flex-grow: 4;
-  display: flex;
-  flex-direction: column;
-  align-items: end;
-  gap: 5px;
-  margin-right: 1em;
-  margin-left: 1em;
+.race-info-panel {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 20, 20, 0.9) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 209, 245, 0.2);
+  padding: 20px;
+  min-width: 280px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.hud-text {
-  text-align: right;
-  padding: 10px;
-  padding-right: 15px;
-  padding-left: 15px;
-  font-weight: 600;
-  width: 100%;
-  text-transform: uppercase;
-}
-
-.leftAligned {
-  text-align: left;
-}
-
-.split {
+.race-header {
   display: flex;
   justify-content: space-between;
-}
-
-#track-name {
-  font-size: 1.2em;
-  font-weight: 700;
-}
-
-.row {
-  display: flex;
   align-items: center;
-  gap: 0.5em;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(0, 209, 245, 0.2);
 }
 
-.row-big {
-  display: flex;
-  align-items: flex-start;
-  font-weight: 600;
+.race-name {
+  color: #ffffff;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.smaller {
-  font-size: 0.5em;
+.position-display {
+  background: linear-gradient(90deg, #00d1f5 0%, #0099cc 100%);
+  color: #000;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(0, 209, 245, 0.3);
 }
 
-.column {
+.position-text {
+  text-shadow: none;
+}
+
+.timing-section {
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
-.position-container {
+.timing-row {
   display: flex;
-  align-items: flex-start;
-}
-
-#position {
-  margin-left: 0.1em;
-  font-size: 5em;
-  line-height: 85%;
-}
-
-#checkpoint {
-  font-size: 2em;
-  line-height: 85%;
-  text-align: end;
-}
-.race-info-panel,
-.leaderboard-row,
-.time-section,
-.lap-section {
-  background: linear-gradient(to right, rgba(20, 20, 20, 0.9), rgba(0, 0, 0, 0.6));
-  // backdrop-filter: blur(4px);
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 2px 8px rgba(0, 209, 245, 0.1);
+  padding: 12px 16px;
+  border-left: 3px solid #00d1f5;
+  transition: all 0.3s ease;
 }
 
-.lap-text,
-.time-label,
-.racer-name {
-  letter-spacing: 0.05em;
+.timing-row:hover {
+  background: rgba(0, 209, 245, 0.1);
+  transform: translateX(2px);
 }
 
-.time-value,
-.racer-time {
+.lap-row {
+  border-left-color: #4CAF50;
+}
+
+.timing-icon {
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+}
+
+.timing-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.timing-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.timing-value {
+  color: #ffffff;
+  font-size: 1.1rem;
   font-weight: 700;
-  font-size: 13px;
-}
-.time-icon,
-.flag-icon {
-  font-size: 18px;
-  color: #00d1f5;
+  font-family: 'Roboto Mono', monospace;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+.time-icon {
+  color: #00d1f5;
+  font-size: 20px;
+}
+
+.flag-icon {
+  color: #4CAF50;
+  font-size: 20px;
+}
+
+.star-icon {
+  color: #FFD700;
+  font-size: 20px;
+}
+
+.checkpoint-icon {
+  color: #FF6B35;
+  font-size: 20px;
+}
+
+.ghosted-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 15px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ghost-icon {
+  color: #ffffff;
+  font-size: 18px;
+}
+
+.ghost-text {
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+// Responsive adjustments
+@media (max-width: 1200px) {
+  .race-info-panel {
+    min-width: 240px;
+  }
+  
+  .race-name {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .race {
+    padding: 10px;
+  }
+  
+  .race-container {
+    flex-direction: column;
+  }
+  
+  .race-info-panel {
+    min-width: 200px;
+  }
+}
 </style>
